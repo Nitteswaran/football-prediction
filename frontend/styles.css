@@ -190,6 +190,46 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
   font-size: 12px; color: var(--ink-soft);
 }
 
+/* ---------- news & insights ---------- */
+.news-lock { max-width: 460px; margin: 0 auto; text-align: center; }
+.insights-panel { margin-bottom: 28px; }
+.insights-list { list-style: none; margin: 14px 0 0; padding: 0; }
+.insights-list li {
+  display: grid; grid-template-columns: 140px 1fr auto;
+  align-items: center; gap: 14px; padding: 8px 0;
+  border-top: 1px solid var(--hairline);
+}
+.ins-team { font-weight: 600; color: var(--ink); }
+.ins-bars { height: 8px; background: rgba(11,110,79,0.10); border-radius: 4px; overflow: hidden; }
+.ins-bar { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+.ins-pct { font-family: var(--mono); font-size: 13px; color: var(--ink); white-space: nowrap; }
+.ins-pct small { color: var(--ink-soft); }
+.gamble-note {
+  margin-top: 16px; font-size: 11px; color: var(--ink-soft);
+  font-family: var(--mono); line-height: 1.5;
+}
+.news-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.news-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--card); border: 1px solid var(--hairline);
+  border-radius: 12px; padding: 18px 20px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.news-card:hover { border-color: var(--green); transform: translateY(-2px); }
+.news-card h4 { font-size: 16px; line-height: 1.35; margin: 0 0 8px; color: var(--ink); }
+.news-card p { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 12px; }
+.news-src { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.08em; }
+.wc-tag {
+  display: inline-block; margin-bottom: 8px;
+  background: var(--green); color: #fff;
+  font: 600 10px var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 5px;
+}
+.news-empty { color: var(--ink-soft); }
+
 .fixture-options {
   display: flex; align-items: end; gap: 24px;
   margin-top: 22px; padding-top: 22px;

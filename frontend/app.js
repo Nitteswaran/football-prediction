@@ -25,6 +25,7 @@ document.querySelectorAll(".nav-link").forEach((btn) => {
     $(`#view-${btn.dataset.view}`).classList.remove("hidden");
     if (btn.dataset.view === "worldcup") loadWorldCup();
     if (btn.dataset.view === "rankings") loadRankings();
+    if (btn.dataset.view === "news") loadNews();
   });
 });
 
@@ -184,25 +185,53 @@ function decoyPrediction(home, away) {
   };
 }
 
-$("#unlock-btn").addEventListener("click", async () => {
-  const btn = $("#unlock-btn");
+/* Start Stripe Checkout. Optionally remember the current fixture so we can
+   re-run it on return (predictor page only). */
+async function beginCheckout(btn, saveFixture) {
   btn.disabled = true;
+  const label = btn.textContent;
   btn.textContent = "Redirecting…";
   try {
-    localStorage.setItem(FIXTURE_KEY, JSON.stringify({
-      home: $("#home-team").value, away: $("#away-team").value,
-      neutral: $("#neutral").checked, tournament: $("#tournament").value,
-    }));
+    if (saveFixture) {
+      localStorage.setItem(FIXTURE_KEY, JSON.stringify({
+        home: $("#home-team").value, away: $("#away-team").value,
+        neutral: $("#neutral").checked, tournament: $("#tournament").value,
+      }));
+    }
     const res = await fetch(`${API}/api/checkout`, { method: "POST" });
     if (!res.ok) throw new Error(await errorDetail(res));
-    const data = await res.json();
-    window.location = data.url;
+    window.location = (await res.json()).url;
   } catch (err) {
     alert("Could not start checkout: " + err.message);
     btn.disabled = false;
-    btn.textContent = "Unlock for $5";
+    btn.textContent = label;
   }
-});
+}
+
+/* Redeem an unlock code; stores the device token and runs onSuccess. */
+async function redeemCode(code, btn, onSuccess) {
+  if (!code) return;
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Restoring…";
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (unlockToken()) headers["X-Unlock-Token"] = unlockToken();
+    const res = await fetch(`${API}/api/redeem`, {
+      method: "POST", headers, body: JSON.stringify({ code }),
+    });
+    if (!res.ok) throw new Error(await errorDetail(res));
+    localStorage.setItem(DEVICE_KEY, (await res.json()).device_token);
+    onSuccess();
+  } catch (err) {
+    alert("Could not restore: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
+$("#unlock-btn").addEventListener("click", (e) => beginCheckout(e.target, true));
 
 /* Back from Stripe Checkout: verify the session server-side, store the
    device token, surface the unlock code, and re-run the pending fixture. */
@@ -242,30 +271,68 @@ $("#have-code-btn").addEventListener("click", () => {
   $("#code-input").focus();
 });
 
-$("#redeem-btn").addEventListener("click", async () => {
-  const btn = $("#redeem-btn");
-  const code = $("#code-input").value.trim();
-  if (!code) return;
-  btn.disabled = true;
-  btn.textContent = "Restoring…";
-  try {
-    const headers = { "Content-Type": "application/json" };
-    if (unlockToken()) headers["X-Unlock-Token"] = unlockToken();
-    const res = await fetch(`${API}/api/redeem`, {
-      method: "POST", headers, body: JSON.stringify({ code }),
-    });
-    if (!res.ok) throw new Error(await errorDetail(res));
-    const data = await res.json();
-    localStorage.setItem(DEVICE_KEY, data.device_token);
+$("#redeem-btn").addEventListener("click", (e) =>
+  redeemCode($("#code-input").value.trim(), e.target, () => {
     setLockedUI(false);
     runPrediction();
-  } catch (err) {
-    alert("Could not restore: " + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Restore";
-  }
+  }));
+
+/* ---------------- news & insights ---------------- */
+$("#news-unlock-btn").addEventListener("click", (e) => beginCheckout(e.target, false));
+$("#news-have-code-btn").addEventListener("click", () => {
+  $("#news-code-entry").classList.toggle("hidden");
+  $("#news-code-input").focus();
 });
+$("#news-redeem-btn").addEventListener("click", (e) =>
+  redeemCode($("#news-code-input").value.trim(), e.target, loadNews));
+
+async function loadNews() {
+  const lock = $("#news-lock"), content = $("#news-content");
+  const headers = unlockToken() ? { "X-Unlock-Token": unlockToken() } : {};
+  let data;
+  try {
+    data = await (await fetch(`${API}/api/news`, { headers })).json();
+  } catch {
+    return;
+  }
+  if (data.locked) {
+    lock.classList.remove("hidden");
+    content.classList.add("hidden");
+    return;
+  }
+  lock.classList.add("hidden");
+  content.classList.remove("hidden");
+
+  const il = $("#insights-list");
+  il.innerHTML = "";
+  for (const t of data.insights) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="ins-team">${t.team}</span>
+      <span class="ins-bars">
+        <span class="ins-bar" style="width:${(100 * t.champion / (data.insights[0].champion || 1)).toFixed(0)}%"></span>
+      </span>
+      <span class="ins-pct">${fmtPct(t.champion)} <small>title</small></span>`;
+    il.appendChild(li);
+  }
+
+  const grid = $("#news-grid");
+  grid.innerHTML = "";
+  for (const n of data.items) {
+    const card = document.createElement("a");
+    card.className = "news-card";
+    card.href = n.link;
+    card.target = "_blank";
+    card.rel = "noopener noreferrer";
+    card.innerHTML = `
+      ${n.world_cup ? '<span class="wc-tag">World Cup</span>' : ""}
+      <h4>${n.title}</h4>
+      <p>${n.summary || ""}</p>
+      <span class="news-src">${n.source}</span>`;
+    grid.appendChild(card);
+  }
+  if (!data.items.length)
+    grid.innerHTML = '<p class="news-empty">No headlines available right now — check back shortly.</p>';
+}
 
 /* ---------------- prediction ---------------- */
 $("#predict-btn").addEventListener("click", runPrediction);

@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import config
-from api import billing
+from api import billing, news
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ if _cors_origins:
                        allow_methods=["GET", "POST"],
                        allow_headers=["Content-Type", "X-Unlock-Token"])
 app.include_router(billing.router)
+app.include_router(news.router)
 
 
 class PredictRequest(BaseModel):

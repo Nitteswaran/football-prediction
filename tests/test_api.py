@@ -146,3 +146,17 @@ def test_redeem_rejects_malformed_code(client, clean_billing):
     # bad format is rejected before any Stripe call
     r = client.post("/api/redeem", json={"code": "not-a-code"})
     assert r.status_code == 404
+
+
+def test_news_locked_without_token(client, clean_billing):
+    # locked path returns before any network fetch
+    r = client.get("/api/news")
+    assert r.status_code == 200 and r.json() == {"locked": True}
+
+
+def test_news_insights_from_simulation(clean_billing):
+    from api import news
+    insights = news.get_insights()
+    assert insights and "team" in insights[0] and "champion" in insights[0]
+    champs = [t["champion"] for t in insights]
+    assert champs == sorted(champs, reverse=True)  # ranked by title odds

@@ -18,6 +18,7 @@
       <button class="nav-link active" data-view="predict">Match predictor</button>
       <button class="nav-link" data-view="worldcup">World Cup 2026</button>
       <button class="nav-link" data-view="rankings">Rankings</button>
+      <button class="nav-link" data-view="news">News &amp; insights</button>
     </nav>
     <span class="header-note">Model v1 · trained on 49,000+ internationals</span>
   </div>
@@ -181,6 +182,40 @@
       <tbody></tbody>
     </table>
   </section>
+</main>
+
+<!-- ============ NEWS & INSIGHTS ============ -->
+<main id="view-news" class="view wrap hidden">
+  <section class="hero">
+    <p class="eyebrow">Latest football · World Cup 2026</p>
+    <h1>News &amp; betting insights.</h1>
+    <p class="lede">Live headlines from across football, World Cup first — paired
+    with where our model currently sees the tournament heading.</p>
+  </section>
+
+  <div class="paywall-card news-lock hidden" id="news-lock">
+    <p class="eyebrow">Subscriber area</p>
+    <h3>Unlock news &amp; insights — $5, once.</h3>
+    <p class="paywall-copy">Curated football and World Cup news plus the model's
+    live title picks. Same one-time unlock as the predictions.</p>
+    <button id="news-unlock-btn" class="btn-primary">Unlock for $5</button>
+    <button class="link-btn" id="news-have-code-btn">Already paid? Enter your code</button>
+    <div class="code-entry hidden" id="news-code-entry">
+      <input id="news-code-input" type="text" autocomplete="off" spellcheck="false"
+             placeholder="PS-XXXX-XXXX" aria-label="Unlock code">
+      <button id="news-redeem-btn" class="btn-primary">Restore</button>
+    </div>
+  </div>
+
+  <div id="news-content" class="hidden">
+    <section class="panel insights-panel">
+      <h3 class="panel-title">Model's World Cup 2026 title picks</h3>
+      <ul class="insights-list" id="insights-list"></ul>
+      <p class="gamble-note">Model estimates for information only. 18+. Betting
+      involves risk — never stake more than you can afford to lose.</p>
+    </section>
+    <section class="news-grid" id="news-grid"></section>
+  </div>
 </main>
 
 <footer class="site-footer">
