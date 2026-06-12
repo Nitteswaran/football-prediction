@@ -148,9 +148,13 @@ function showCode(code, used, cap) {
   if (!code) return;
   const banner = $("#code-banner");
   const slots = (used && cap) ? ` · used on ${used} of ${cap} devices` : "";
-  banner.innerHTML = `Your unlock code: <strong>${code}</strong>${slots}` +
-    `<span class="code-hint">Save it — enter it to unlock on another browser or device.</span>`;
+  banner.innerHTML =
+    `<button class="code-close" aria-label="Dismiss">×</button>` +
+    `<div>Your unlock code: <strong>${code}</strong>${slots}` +
+    `<span class="code-hint">Save it — enter it to unlock on another browser or device.</span></div>`;
   banner.classList.remove("hidden");
+  banner.querySelector(".code-close").addEventListener("click",
+    () => banner.classList.add("hidden"));
 }
 
 /* Plausible decoy numbers to blur behind the paywall — the real insights

@@ -149,7 +149,11 @@ def _session_code(session_id: str) -> str | None:
         return None                          # invalid/foreign id; don't log it
     if session.payment_status != "paid":
         return None
-    return (session.metadata or {}).get("unlock_code")
+    try:
+        # stripe v15 metadata is a StripeObject without dict.get
+        return session.metadata["unlock_code"]
+    except (KeyError, TypeError):
+        return None
 
 
 def _code_is_paid(code: str) -> bool:
