@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 from collections import defaultdict, deque
 
@@ -95,9 +96,18 @@ def is_unlocked(token: str | None) -> bool:
 
 def _public_base_url(request: Request) -> str:
     # Behind a proxy/CDN the Host header is not trustworthy; production must
-    # pin the public origin via PUBLIC_BASE_URL.
-    return os.environ.get("PUBLIC_BASE_URL",
-                          str(request.base_url)).rstrip("/")
+    # pin the public origin via PUBLIC_BASE_URL. A present-but-blank value
+    # (easy to do in a hosting dashboard) is treated as unset.
+    configured = (os.environ.get("PUBLIC_BASE_URL") or "").strip()
+    base = (configured or str(request.base_url)).rstrip("/")
+    if not re.match(r"^https?://[^/\s]+$", base):
+        # fail loudly with the offending value in logs, never a cryptic
+        # Stripe "Not a valid URL" error
+        logger.error("resolved public base url is not absolute: %r "
+                     "(PUBLIC_BASE_URL=%r)", base, configured)
+        raise HTTPException(500, "server misconfigured: PUBLIC_BASE_URL must be "
+                                 "a full https://… origin")
+    return base
 
 
 @router.post("/api/checkout")

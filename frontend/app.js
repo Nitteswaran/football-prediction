@@ -5,6 +5,17 @@ const API = "";   // same origin
 const $ = (sel) => document.querySelector(sel);
 const fmtPct = (p, dp = 1) => (100 * p).toFixed(dp) + "%";
 
+/* Extract a human message from a failed response without assuming JSON —
+   an edge/proxy (Cloudflare, HF) may return HTML on 5xx/timeouts. */
+async function errorDetail(res) {
+  const text = await res.text().catch(() => "");
+  try {
+    return JSON.parse(text).detail || res.statusText;
+  } catch {
+    return res.statusText || `request failed (${res.status})`;
+  }
+}
+
 /* ---------------- navigation ---------------- */
 document.querySelectorAll(".nav-link").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -173,8 +184,9 @@ $("#unlock-btn").addEventListener("click", async () => {
       neutral: $("#neutral").checked, tournament: $("#tournament").value,
     }));
     const res = await fetch(`${API}/api/checkout`, { method: "POST" });
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
-    window.location = (await res.json()).url;
+    if (!res.ok) throw new Error(await errorDetail(res));
+    const data = await res.json();
+    window.location = data.url;
   } catch (err) {
     alert("Could not start checkout: " + err.message);
     btn.disabled = false;
@@ -229,7 +241,7 @@ async function runPrediction() {
       headers,
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    if (!res.ok) throw new Error(await errorDetail(res));
     const data = await res.json();
     if (data.locked) {
       renderPrediction(decoyPrediction(data.home_team, data.away_team));
