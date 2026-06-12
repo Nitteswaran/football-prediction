@@ -95,7 +95,7 @@ def predict(req: PredictRequest, request: Request,
         raise HTTPException(400, "teams must differ")
     # paywall: insights are only computed and returned for paid sessions —
     # the locked response carries no real numbers for the client to reveal
-    if not billing.is_unlocked(x_unlock_token):
+    if not billing.device_unlocked(x_unlock_token):
         return {"home_team": req.home_team, "away_team": req.away_team,
                 "locked": True}
     pred = p.predict(req.home_team, req.away_team, neutral=req.neutral,

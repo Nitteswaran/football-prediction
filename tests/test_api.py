@@ -97,3 +97,52 @@ def test_public_base_url_rejects_relative(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         billing._public_base_url(_fake_request(base="pitchsense.fun"))
     assert exc.value.status_code == 500
+
+
+# --- unlock codes & activation cap ----------------------------------------
+@pytest.fixture
+def clean_billing(monkeypatch):
+    """Billing enabled with a fresh in-memory activation counter."""
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_dummy")
+    monkeypatch.setattr(billing, "_activations", billing.defaultdict(int))
+    monkeypatch.setattr(billing, "ACTIVATION_CAP", 3)
+    return billing
+
+
+def test_code_format(clean_billing):
+    code = clean_billing._new_code()
+    assert billing._CODE_RE.fullmatch(code)
+
+
+def test_token_signed_and_verified(clean_billing):
+    b = clean_billing
+    code = b._new_code()
+    tok, status = b._issue_token(code, None)
+    assert status == "ok" and b.device_unlocked(tok)
+    # tampered token must not verify
+    assert not b.device_unlocked(tok[:-1] + ("A" if tok[-1] != "A" else "B"))
+    assert not b.device_unlocked("PS-AAAA-AAAA.forged")
+
+
+def test_issue_is_idempotent(clean_billing):
+    b = clean_billing
+    code = b._new_code()
+    tok, _ = b._issue_token(code, None)
+    tok2, status = b._issue_token(code, tok)   # same token re-presented
+    assert tok2 == tok and status == "ok"
+    assert b._activations[code] == 1           # no extra slot consumed
+
+
+def test_activation_cap_enforced(clean_billing):
+    b = clean_billing
+    code = b._new_code()
+    for _ in range(3):
+        assert b._issue_token(code, None)[1] == "ok"
+    token, status = b._issue_token(code, None)
+    assert token is None and status == "capped"
+
+
+def test_redeem_rejects_malformed_code(client, clean_billing):
+    # bad format is rejected before any Stripe call
+    r = client.post("/api/redeem", json={"code": "not-a-code"})
+    assert r.status_code == 404

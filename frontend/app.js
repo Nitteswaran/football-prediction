@@ -132,14 +132,24 @@ async function loadTeams() {
 }
 
 /* ---------------- paywall ---------------- */
-const UNLOCK_KEY = "ps_unlock_token";
+const DEVICE_KEY = "ps_device_token";   // per-browser unlock token
 const FIXTURE_KEY = "ps_pending_fixture";
 
-const unlockToken = () => localStorage.getItem(UNLOCK_KEY);
+const unlockToken = () => localStorage.getItem(DEVICE_KEY);
 
 function setLockedUI(locked) {
   $("#result").classList.toggle("locked", locked);
   $("#paywall").classList.toggle("hidden", !locked);
+}
+
+/* Show the unlock code so the buyer can reuse it on other devices. */
+function showCode(code, used, cap) {
+  if (!code) return;
+  const banner = $("#code-banner");
+  const slots = (used && cap) ? ` · used on ${used} of ${cap} devices` : "";
+  banner.innerHTML = `Your unlock code: <strong>${code}</strong>${slots}` +
+    `<span class="code-hint">Save it — enter it to unlock on another browser or device.</span>`;
+  banner.classList.remove("hidden");
 }
 
 /* Plausible decoy numbers to blur behind the paywall — the real insights
@@ -195,20 +205,26 @@ $("#unlock-btn").addEventListener("click", async () => {
 });
 
 /* Back from Stripe Checkout: verify the session server-side, store the
-   unlock token, and re-run the fixture the user was looking at. */
+   device token, surface the unlock code, and re-run the pending fixture. */
 async function handleCheckoutReturn() {
   const params = new URLSearchParams(location.search);
   const sid = params.get("session_id");
   if (params.has("session_id") || params.has("canceled"))
     history.replaceState({}, "", location.pathname);
   if (!sid) return;
-  const res = await fetch(`${API}/api/unlock?session_id=${encodeURIComponent(sid)}`);
-  const { unlocked } = await res.json();
-  if (!unlocked) {
-    alert("Payment was not completed — insights remain locked.");
+  const headers = unlockToken() ? { "X-Unlock-Token": unlockToken() } : {};
+  const res = await fetch(`${API}/api/unlock?session_id=${encodeURIComponent(sid)}`,
+                          { headers });
+  const data = await res.json();
+  if (!data.unlocked) {
+    if (data.error === "device_limit")
+      alert(`This purchase has reached its device limit. Unlock code: ${data.code}`);
+    else
+      alert("Payment was not completed — insights remain locked.");
     return;
   }
-  localStorage.setItem(UNLOCK_KEY, sid);
+  if (data.device_token) localStorage.setItem(DEVICE_KEY, data.device_token);
+  showCode(data.code, data.devices_used, data.cap);
   const f = JSON.parse(localStorage.getItem(FIXTURE_KEY) || "null");
   if (f && homeCombo) {
     homeCombo.set(f.home);
@@ -219,6 +235,37 @@ async function handleCheckoutReturn() {
   }
   localStorage.removeItem(FIXTURE_KEY);
 }
+
+/* Restore an existing purchase on this browser by entering the code. */
+$("#have-code-btn").addEventListener("click", () => {
+  $("#code-entry").classList.toggle("hidden");
+  $("#code-input").focus();
+});
+
+$("#redeem-btn").addEventListener("click", async () => {
+  const btn = $("#redeem-btn");
+  const code = $("#code-input").value.trim();
+  if (!code) return;
+  btn.disabled = true;
+  btn.textContent = "Restoring…";
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (unlockToken()) headers["X-Unlock-Token"] = unlockToken();
+    const res = await fetch(`${API}/api/redeem`, {
+      method: "POST", headers, body: JSON.stringify({ code }),
+    });
+    if (!res.ok) throw new Error(await errorDetail(res));
+    const data = await res.json();
+    localStorage.setItem(DEVICE_KEY, data.device_token);
+    setLockedUI(false);
+    runPrediction();
+  } catch (err) {
+    alert("Could not restore: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Restore";
+  }
+});
 
 /* ---------------- prediction ---------------- */
 $("#predict-btn").addEventListener("click", runPrediction);

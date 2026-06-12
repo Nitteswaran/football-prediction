@@ -9,6 +9,7 @@ catboost_info/
 data/raw/
 data/processed/features.parquet
 data/processed/paid_sessions.json
+data/processed/unlocks.json
 reports/figures/
 tests/
 .env

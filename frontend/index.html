@@ -85,8 +85,15 @@
         fixture, forever, on this device.</p>
         <button id="unlock-btn" class="btn-primary">Unlock for $5</button>
         <p class="paywall-note">One-time payment via Stripe Checkout — no account needed.</p>
+        <button class="link-btn" id="have-code-btn">Already paid? Enter your code</button>
+        <div class="code-entry hidden" id="code-entry">
+          <input id="code-input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="PS-XXXX-XXXX" aria-label="Unlock code">
+          <button id="redeem-btn" class="btn-primary">Restore</button>
+        </div>
       </div>
     </div>
+    <div class="code-banner hidden" id="code-banner"></div>
     <div class="result-head">
       <h2 id="result-title"></h2>
       <span class="tag" id="result-tag"></span>
