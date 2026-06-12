@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+# processed data is regenerable; only the serve-time snapshot is deployed
+data/processed/*
+!data/processed/state_snapshot.joblib
+# trained artifacts needed at serve time are tracked for deployment
+models/artifacts/*
+!models/artifacts/model_bundle.joblib
+!models/artifacts/ensemble_weights.json
+catboost_info/
+.pytest_cache/
+.ipynb_checkpoints/
+.env
+reports/figures/

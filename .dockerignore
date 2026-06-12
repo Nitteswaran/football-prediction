@@ -1,0 +1,15 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+notebooks/
+catboost_info/
+data/raw/
+data/processed/features.parquet
+data/processed/paid_sessions.json
+reports/figures/
+tests/
+.env
+.env.example
