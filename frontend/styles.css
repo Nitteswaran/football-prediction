@@ -58,6 +58,20 @@ body {
   margin-left: auto; font-size: 12px; color: var(--ink-soft);
   font-family: var(--mono);
 }
+.nav-toggle {
+  display: none; margin-left: auto;
+  width: 40px; height: 40px; padding: 9px;
+  background: none; border: 1px solid var(--hairline); border-radius: 9px;
+  cursor: pointer; flex-direction: column; justify-content: space-between;
+}
+.nav-toggle span {
+  display: block; height: 2px; width: 100%;
+  background: var(--ink); border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.nav-toggle.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
 /* ---------- hero ---------- */
 .hero { padding: 72px 0 48px; max-width: 720px; }
@@ -343,6 +357,9 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .hm-head { background: none !important; color: var(--ink-soft); font-weight: 500; }
 .heatmap-caption { margin-top: 12px; font-size: 12px; color: var(--ink-soft); }
 
+/* wide tables scroll horizontally instead of overflowing on small screens */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 /* key-value + model tables */
 .kv-table, .model-table, .wc-table, .rank-table { width: 100%; border-collapse: collapse; }
 .kv-table td {
@@ -392,11 +409,30 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
   border-top: 1px solid var(--hairline);
   padding: 28px 0; margin-top: 80px;
 }
-.site-footer .wrap {
-  display: flex; justify-content: space-between;
+.footer-inner {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; flex-wrap: wrap;
   font-size: 12.5px; color: var(--ink-soft);
   font-family: var(--mono);
 }
+.footer-links { display: flex; gap: 18px; }
+.footer-links a { color: var(--ink-soft); text-decoration: none; }
+.footer-links a:hover { color: var(--green); text-decoration: underline; }
+
+/* ---------- legal pages ---------- */
+.legal { max-width: 720px; padding-top: 48px; padding-bottom: 80px; }
+.legal h1 { font-size: clamp(30px, 5vw, 42px); margin-bottom: 8px; }
+.legal-meta { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; margin-bottom: 32px; }
+.legal h2 { font-size: 19px; margin: 32px 0 10px; color: var(--ink); }
+.legal p { color: var(--ink); margin-bottom: 14px; }
+.legal ul { margin: 0 0 16px 20px; }
+.legal li { margin-bottom: 8px; color: var(--ink); }
+.legal code {
+  font-family: var(--mono); font-size: 0.9em;
+  background: rgba(11,110,79,0.08); padding: 1px 5px; border-radius: 4px;
+}
+.legal a { color: var(--green); }
+.legal-foot { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hairline); }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
@@ -405,4 +441,40 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
   .vs { display: none; }
   .fixture-options { flex-wrap: wrap; }
   .header-note { display: none; }
+}
+
+@media (max-width: 720px) {
+  .wrap { padding: 0 18px; }
+  .hero { padding: 48px 0 32px; }
+  .lede { font-size: 16px; }
+
+  /* hamburger menu */
+  .nav-toggle { display: flex; }
+  .nav {
+    position: absolute; top: 64px; left: 0; right: 0;
+    flex-direction: column; gap: 0;
+    background: var(--paper); border-bottom: 1px solid var(--hairline);
+    padding: 8px; box-shadow: 0 12px 24px rgba(22,29,26,0.10);
+    display: none;
+  }
+  .nav.open { display: flex; }
+  .nav-link {
+    width: 100%; text-align: left; border-radius: 8px;
+    padding: 13px 14px; font-size: 15px;
+  }
+
+  /* tables: tighten and let the wrapper scroll */
+  .panel { padding: 18px 16px; }
+  .wc-table th, .wc-table td, .rank-table th, .rank-table td {
+    padding: 9px 10px; font-size: 13px;
+  }
+  .wc-table { min-width: 560px; }      /* scrolls within .table-scroll */
+  .wc-table .bar-col { width: 130px; }
+  .champ-bar .val { min-width: 44px; }
+
+  .insights-list li { grid-template-columns: 96px 1fr auto; gap: 10px; }
+  .ins-team { font-size: 14px; }
+  .news-grid { grid-template-columns: 1fr; }
+  .code-banner { font-size: 13px; padding: 12px 40px; }
+  .footer-inner { justify-content: flex-start; }
 }

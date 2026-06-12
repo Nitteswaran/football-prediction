@@ -132,6 +132,14 @@ if FRONTEND_DIR.exists():
     def index():
         return FileResponse(FRONTEND_DIR / "index.html")
 
+    @app.get("/terms", include_in_schema=False)
+    def terms():
+        return FileResponse(FRONTEND_DIR / "terms.html")
+
+    @app.get("/privacy", include_in_schema=False)
+    def privacy():
+        return FileResponse(FRONTEND_DIR / "privacy.html")
+
 
 if __name__ == "__main__":
     import uvicorn

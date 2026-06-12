@@ -16,7 +16,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="wordmark" href="/">Pitchsense</a>
-    <nav class="nav">
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu"
+            aria-expanded="false" aria-controls="nav">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav" id="nav">
       <button class="nav-link active" data-view="predict">Match predictor</button>
       <button class="nav-link" data-view="worldcup">World Cup 2026</button>
       <button class="nav-link" data-view="rankings">Rankings</button>
@@ -155,17 +159,19 @@
     third-place allocation included.</p>
   </section>
   <section class="panel">
-    <table class="wc-table" id="wc-table">
-      <thead>
-        <tr>
-          <th>#</th><th>Team</th><th>Group</th>
-          <th class="num">Advance</th><th class="num">Quarters</th>
-          <th class="num">Semis</th><th class="num">Final</th>
-          <th class="bar-col">Champion</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-scroll">
+      <table class="wc-table" id="wc-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Team</th><th>Group</th>
+            <th class="num">Advance</th><th class="num">Quarters</th>
+            <th class="num">Semis</th><th class="num">Final</th>
+            <th class="bar-col">Champion</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 </main>
 
@@ -178,10 +184,12 @@
     dataset. The backbone of the model's strength priors.</p>
   </section>
   <section class="panel">
-    <table class="rank-table" id="rank-table">
-      <thead><tr><th>#</th><th>Team</th><th class="num">Elo</th><th class="num">Matches</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-scroll">
+      <table class="rank-table" id="rank-table">
+        <thead><tr><th>#</th><th>Team</th><th class="num">Elo</th><th class="num">Matches</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 </main>
 
@@ -220,9 +228,12 @@
 </main>
 
 <footer class="site-footer">
-  <div class="wrap">
-    <span>Pitchsense — an end-to-end football prediction system.</span>
-    <span>XGBoost · LightGBM · CatBoost · PyTorch · Dixon-Coles · Optuna</span>
+  <div class="wrap footer-inner">
+    <span>Pitchsense — football predictions for information only. 18+. Not betting advice.</span>
+    <nav class="footer-links">
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
   </div>
 </footer>
 

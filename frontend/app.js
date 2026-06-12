@@ -17,12 +17,28 @@ async function errorDetail(res) {
 }
 
 /* ---------------- navigation ---------------- */
+const navToggle = $("#nav-toggle");
+const nav = $("#nav");
+
+function closeMenu() {
+  nav.classList.remove("open");
+  navToggle.classList.remove("open");
+  navToggle.setAttribute("aria-expanded", "false");
+}
+navToggle.addEventListener("click", () => {
+  const open = nav.classList.toggle("open");
+  navToggle.classList.toggle("open", open);
+  navToggle.setAttribute("aria-expanded", String(open));
+});
+
 document.querySelectorAll(".nav-link").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-link").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
     $(`#view-${btn.dataset.view}`).classList.remove("hidden");
+    closeMenu();                       // collapse the mobile menu after choosing
+    window.scrollTo({ top: 0 });
     if (btn.dataset.view === "worldcup") loadWorldCup();
     if (btn.dataset.view === "rankings") loadRankings();
     if (btn.dataset.view === "news") loadNews();
