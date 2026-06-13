@@ -461,6 +461,40 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .form-dot.form-L { background: #C0392B; }
 .form-dot.form-D { background: #9A958A; }
 
+/* ---------- "why stronger" card ---------- */
+.strength-card {
+  margin-top: 20px; padding: 24px;
+  background: var(--card); border: 1px solid var(--hairline);
+  border-left: 3px solid var(--green); border-radius: 14px;
+}
+.strength-card .panel-title { margin-bottom: 14px; color: var(--green); }
+.reasons { list-style: none; margin: 0; padding: 0; }
+.reasons li {
+  position: relative; padding: 7px 0 7px 24px; font-size: 14px; color: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.reasons li:last-child { border-bottom: 0; }
+.reasons li::before {
+  content: "✓"; position: absolute; left: 0; top: 7px;
+  color: var(--green); font-weight: 700;
+}
+.strength-news { margin-top: 16px; }
+.strength-news-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px;
+}
+.strength-news-item {
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--hairline);
+  text-decoration: none; color: var(--ink); font-size: 13px;
+}
+.strength-news-item:last-child { border-bottom: 0; }
+.strength-news-item:hover span:first-child { color: var(--green); text-decoration: underline; }
+.strength-news-item .sn-src {
+  font-family: var(--mono); font-size: 10px; color: var(--ink-soft);
+  text-transform: uppercase; white-space: nowrap;
+}
+
 /* ---------- schedule ---------- */
 .sched-group { margin-bottom: 18px; }
 .sched-title {

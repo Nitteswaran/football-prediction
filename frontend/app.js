@@ -477,6 +477,90 @@ function renderPrediction(d) {
   renderHeatmap(d);
   renderDrivers(d.drivers);
   renderModelTable(d.model_probabilities);
+  renderStrengthCard(d);
+}
+
+/* "Why this team is stronger" — plain-language reasons from the model's own
+   signals, plus live news headlines mentioning either team. */
+let NEWS_CACHE = null;
+
+function renderStrengthCard(d) {
+  const card = $("#strength-card");
+  const homeFav = d.probabilities.home_win >= d.probabilities.away_win;
+  const fav = homeFav ? d.home_team : d.away_team;
+  const opp = homeFav ? d.away_team : d.home_team;
+  const dr = d.drivers || {};
+  const fm = TEAM_META[fav] || {}, om = TEAM_META[opp] || {};
+  const reasons = [];
+
+  const eloFav = homeFav ? dr.elo_home : dr.elo_away;
+  const eloOpp = homeFav ? dr.elo_away : dr.elo_home;
+  if (eloFav != null && eloOpp != null && eloFav > eloOpp)
+    reasons.push(`Higher Elo rating by ${Math.round(eloFav - eloOpp)} (${Math.round(eloFav)} vs ${Math.round(eloOpp)})`);
+
+  const ppgFav = homeFav ? dr.form10_ppg_home : dr.form10_ppg_away;
+  const ppgOpp = homeFav ? dr.form10_ppg_away : dr.form10_ppg_home;
+  if (ppgFav != null && ppgOpp != null && ppgFav > ppgOpp)
+    reasons.push(`Better recent form — ${ppgFav.toFixed(1)} vs ${ppgOpp.toFixed(1)} points per game (last 10)`);
+
+  if (fm.rank != null && om.rank != null && fm.rank < om.rank)
+    reasons.push(`Ranked higher — #${fm.rank} vs #${om.rank}`);
+
+  // h2h5_weighted_score is signed from the home team's perspective
+  if (dr.h2h5_weighted_score != null && dr.h2h5_weighted_score !== 0) {
+    const favEdge = homeFav ? dr.h2h5_weighted_score > 0 : dr.h2h5_weighted_score < 0;
+    if (favEdge) reasons.push("Edge in recent head-to-head meetings");
+  }
+
+  if (fm.title != null && om.title != null && fm.title > om.title && fm.title > 0.01)
+    reasons.push(`Stronger World Cup title odds — ${(fm.title * 100).toFixed(1)}% vs ${(om.title * 100).toFixed(1)}%`);
+
+  const xgFav = homeFav ? d.expected_goals.home : d.expected_goals.away;
+  const xgOpp = homeFav ? d.expected_goals.away : d.expected_goals.home;
+  if (xgFav > xgOpp)
+    reasons.push(`Projected to outscore — ${xgFav.toFixed(2)} vs ${xgOpp.toFixed(2)} expected goals`);
+
+  $("#strength-title").textContent = `Why ${fav} is favoured`;
+  const ul = $("#strength-reasons");
+  ul.innerHTML = "";
+  if (!reasons.length) {
+    const li = document.createElement("li");
+    li.textContent = "This is a close, evenly-matched fixture — no strong edge either way.";
+    ul.appendChild(li);
+  } else {
+    for (const r of reasons.slice(0, 5)) {
+      const li = document.createElement("li");
+      li.textContent = r;
+      ul.appendChild(li);
+    }
+  }
+  card.classList.remove("hidden");
+  loadStrengthNews(d.home_team, d.away_team);
+}
+
+async function loadStrengthNews(home, away) {
+  const box = $("#strength-news");
+  box.innerHTML = "";
+  try {
+    if (!NEWS_CACHE) {
+      const headers = unlockToken() ? { "X-Unlock-Token": unlockToken() } : {};
+      const data = await (await fetch(`${API}/api/news`, { headers })).json();
+      NEWS_CACHE = data.locked ? [] : (data.items || []);
+    }
+    const norm = (s) => (s || "").toLowerCase();
+    const hits = NEWS_CACHE.filter((n) =>
+      [home, away].some((t) => norm(n.title).includes(norm(t)) || norm(n.summary).includes(norm(t)))
+    ).slice(0, 3);
+    if (!hits.length) return;
+    box.innerHTML = `<h4 class="strength-news-title">In the news</h4>`;
+    for (const n of hits) {
+      const a = document.createElement("a");
+      a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.className = "strength-news-item";
+      a.innerHTML = `<span>${n.title}</span><span class="sn-src">${n.source}</span>`;
+      box.appendChild(a);
+    }
+  } catch { /* news is best-effort; reasons already shown */ }
 }
 
 function renderHeatmap(d) {
