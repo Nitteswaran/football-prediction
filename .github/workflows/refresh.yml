@@ -1,0 +1,39 @@
+# Weekly automated retrain + ship to the Hugging Face Space.
+# One-time setup:
+#   1. Push this repo to GitHub.
+#   2. Add repo secret HF_TOKEN (a Hugging Face write token).
+# Runs every Monday 06:00 UTC, and on manual dispatch.
+name: refresh-model
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt \
+            --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Retrain and ship (guardrailed)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add hf "https://Nittes:${HF_TOKEN}@huggingface.co/spaces/Nittes/pitchsense" || \
+            git remote set-url hf "https://Nittes:${HF_TOKEN}@huggingface.co/spaces/Nittes/pitchsense"
+          PITCHSENSE_PUSH_REMOTE=hf bash scripts/refresh.sh

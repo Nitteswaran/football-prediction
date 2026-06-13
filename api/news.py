@@ -30,12 +30,43 @@ FEEDS = [
     ("BBC Sport", "https://feeds.bbci.co.uk/sport/football/rss.xml"),
     ("Sky Sports", "https://www.skysports.com/rss/12040"),
     ("Guardian", "https://www.theguardian.com/football/rss"),
+    ("ESPN", "https://www.espn.com/espn/rss/soccer/news"),
+    ("Yahoo Sports", "https://sports.yahoo.com/soccer/rss/"),
 ]
 _CACHE_TTL = 900  # 15 minutes
 _cache: dict = {"at": 0.0, "items": []}
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _WC_RE = re.compile(r"world cup", re.IGNORECASE)
+
+# Extra name variants headlines use, beyond the literal results-dataset name.
+TEAM_ALIASES: dict[str, list[str]] = {
+    "South Korea": ["South Korea", "Korea Republic"],
+    "North Korea": ["North Korea", "Korea DPR"],
+    "United States": ["United States", "USA", "USMNT", "US men"],
+    "Netherlands": ["Netherlands", "Dutch", "Holland"],
+    "Czech Republic": ["Czech Republic", "Czechia"],
+    "Ivory Coast": ["Ivory Coast", "Côte d'Ivoire", "Cote d'Ivoire"],
+    "DR Congo": ["DR Congo", "Congo DR", "DRC"],
+    "Cape Verde": ["Cape Verde", "Cabo Verde"],
+    "Saudi Arabia": ["Saudi Arabia", "Saudi"],
+    "Bosnia and Herzegovina": ["Bosnia and Herzegovina", "Bosnia"],
+    "Republic of Ireland": ["Republic of Ireland", "Ireland"],
+}
+_pattern_cache: dict[str, re.Pattern] = {}
+
+
+def _team_pattern(team: str) -> re.Pattern:
+    if team not in _pattern_cache:
+        names = TEAM_ALIASES.get(team, [team])
+        alts = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+        _pattern_cache[team] = re.compile(rf"\b(?:{alts})\b", re.IGNORECASE)
+    return _pattern_cache[team]
+
+
+def _mentions(item: dict, team: str) -> bool:
+    pat = _team_pattern(team)
+    return bool(pat.search(item["title"]) or pat.search(item.get("summary", "")))
 
 
 def _clean(text: str) -> str:
@@ -119,3 +150,29 @@ def news(request: Request, x_unlock_token: str | None = Header(default=None)):
     if not billing.device_unlocked(x_unlock_token):
         return {"locked": True}
     return {"locked": False, "items": get_news()[:24], "insights": get_insights()}
+
+
+@router.get("/api/matchnews")
+def matchnews(home: str, away: str, request: Request,
+              x_unlock_token: str | None = Header(default=None)):
+    """Headlines that actually name each side of a fixture, per team."""
+    news_limiter.check(request)
+    if not billing.device_unlocked(x_unlock_token):
+        return {"locked": True}
+    items = get_news()
+    used: set[str] = set()
+
+    def pick(team: str, n: int = 4) -> list[dict]:
+        out = []
+        for it in items:
+            if it["title"] in used:
+                continue
+            if _mentions(it, team):
+                used.add(it["title"])
+                out.append({k: it[k] for k in ("title", "link", "source")})
+                if len(out) >= n:
+                    break
+        return out
+
+    return {"locked": False, "home": home, "away": away,
+            "home_news": pick(home), "away_news": pick(away)}

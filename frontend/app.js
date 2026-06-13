@@ -482,8 +482,6 @@ function renderPrediction(d) {
 
 /* "Why this team is stronger" — plain-language reasons from the model's own
    signals, plus live news headlines mentioning either team. */
-let NEWS_CACHE = null;
-
 function renderStrengthCard(d) {
   const card = $("#strength-card");
   const homeFav = d.probabilities.home_win >= d.probabilities.away_win;
@@ -542,23 +540,28 @@ async function loadStrengthNews(home, away) {
   const box = $("#strength-news");
   box.innerHTML = "";
   try {
-    if (!NEWS_CACHE) {
-      const headers = unlockToken() ? { "X-Unlock-Token": unlockToken() } : {};
-      const data = await (await fetch(`${API}/api/news`, { headers })).json();
-      NEWS_CACHE = data.locked ? [] : (data.items || []);
-    }
-    const norm = (s) => (s || "").toLowerCase();
-    const hits = NEWS_CACHE.filter((n) =>
-      [home, away].some((t) => norm(n.title).includes(norm(t)) || norm(n.summary).includes(norm(t)))
-    ).slice(0, 3);
-    if (!hits.length) return;
+    const headers = unlockToken() ? { "X-Unlock-Token": unlockToken() } : {};
+    const q = `home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`;
+    const data = await (await fetch(`${API}/api/matchnews?${q}`, { headers })).json();
+    if (data.locked) return;
+    const groups = [
+      [home, TEAM_META[home], data.home_news || []],
+      [away, TEAM_META[away], data.away_news || []],
+    ].filter(([, , items]) => items.length);
+    if (!groups.length) return;
     box.innerHTML = `<h4 class="strength-news-title">In the news</h4>`;
-    for (const n of hits) {
-      const a = document.createElement("a");
-      a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer";
-      a.className = "strength-news-item";
-      a.innerHTML = `<span>${n.title}</span><span class="sn-src">${n.source}</span>`;
-      box.appendChild(a);
+    for (const [team, meta, items] of groups) {
+      const head = document.createElement("div");
+      head.className = "sn-team";
+      head.textContent = `${meta && meta.flag ? meta.flag + " " : ""}${team}`;
+      box.appendChild(head);
+      for (const n of items) {
+        const a = document.createElement("a");
+        a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer";
+        a.className = "strength-news-item";
+        a.innerHTML = `<span>${n.title}</span><span class="sn-src">${n.source}</span>`;
+        box.appendChild(a);
+      }
     }
   } catch { /* news is best-effort; reasons already shown */ }
 }

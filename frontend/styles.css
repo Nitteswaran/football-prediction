@@ -488,6 +488,10 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
   padding: 8px 0; border-bottom: 1px solid var(--hairline);
   text-decoration: none; color: var(--ink); font-size: 13px;
 }
+.sn-team {
+  font-weight: 600; font-size: 13px; color: var(--ink);
+  margin: 12px 0 4px;
+}
 .strength-news-item:last-child { border-bottom: 0; }
 .strength-news-item:hover span:first-child { color: var(--green); text-decoration: underline; }
 .strength-news-item .sn-src {

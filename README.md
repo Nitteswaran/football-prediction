@@ -143,6 +143,21 @@ Production checklist:
 - A refund does not automatically re-lock a paid session id; revoke manually
   by removing it from `data/processed/paid_sessions.json` if needed.
 
+## Keeping the model current (`make refresh`)
+
+`make refresh` re-pulls the latest results, retrains, and **ships the new model
+to the Space only if accuracy doesn't regress** on the held-out test window
+(`scripts/refresh_guardrail.py` aborts the push otherwise). It pushes to the
+git remote named by `PITCHSENSE_PUSH_REMOTE` (default `space`).
+
+To automate it (the Space can't retrain itself — it's a serving container):
+
+- **GitHub Actions (recommended, no machine needed):** push this repo to
+  GitHub, add an `HF_TOKEN` write-token secret, and the included
+  `.github/workflows/refresh.yml` retrains every Monday 06:00 UTC and ships.
+- **Local cron:** `0 6 * * 1 cd /path/to/football-prediction && make refresh`
+  (your machine must be on and have git auth for the `space` remote).
+
 ## Reports
 
 After `make evaluate` / `make simulate`:

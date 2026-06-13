@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data features tune train evaluate simulate api test all
+.PHONY: setup data features tune train evaluate simulate api test all refresh
 
 setup:
 	python3 -m venv .venv
@@ -38,3 +38,7 @@ test:
 	$(PY) -m pytest tests/ -q
 
 all: features train evaluate simulate
+
+# re-pull results, retrain, and ship to the Space only if accuracy holds
+refresh:
+	bash scripts/refresh.sh

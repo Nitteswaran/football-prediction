@@ -173,6 +173,23 @@ def test_news_locked_without_token(client, clean_billing):
     assert r.status_code == 200 and r.json() == {"locked": True}
 
 
+def test_matchnews_locked_without_token(client, clean_billing):
+    r = client.get("/api/matchnews?home=Brazil&away=England")
+    assert r.status_code == 200 and r.json() == {"locked": True}
+
+
+def test_news_alias_matching():
+    from api import news
+    def item(t, s=""):
+        return {"title": t, "summary": s}
+    assert news._mentions(item("Korea Republic stun Mexico"), "South Korea")
+    assert news._mentions(item("USMNT name squad"), "United States")
+    assert news._mentions(item("Dutch flair on show"), "Netherlands")
+    # word-boundary: "US" must not match inside another word
+    assert not news._mentions(item("A thunderous strike"), "United States")
+    assert not news._mentions(item("Brazil cruise past Chile"), "England")
+
+
 def test_teammeta_card_fields(client):
     m = client.get("/api/teammeta").json()
     can = m["Canada"]
