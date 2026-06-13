@@ -3,6 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Meta Pixel (deferred until the visitor consents — see consent banner) -->
+<script>
+window.loadMetaPixel = function () {
+  if (window.fbq) return;                 // already loaded
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '2094035021172777');
+  fbq('track', 'PageView');
+};
+// Load immediately only if the visitor previously consented.
+if (localStorage.getItem('ps_consent') === 'granted') window.loadMetaPixel();
+</script>
+<!-- End Meta Pixel -->
+
 <title>World Cup 2026 Predictor — AI Match Forecasts & Title Odds | Pitchsense</title>
 <meta name="description" content="Pitchsense predicts the 2026 World Cup with a calibrated machine-learning model: live win/draw/loss probabilities, expected goals, exact-score odds, and 100,000-simulation title chances for all 48 teams. Predict any international match free.">
 <meta name="keywords" content="World Cup 2026 predictor, World Cup predictions, football match predictor, who will win the World Cup 2026, soccer prediction AI, expected goals, match outcome probabilities">
@@ -365,6 +386,32 @@
     </nav>
   </div>
 </footer>
+
+<!-- Cookie / Pixel consent banner -->
+<div id="consent-banner" hidden role="dialog" aria-label="Cookie consent" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:9999;max-width:560px;margin:0 auto;background:#0E2A22;color:#EAF3EF;border:1px solid #1E4B3D;border-radius:12px;padding:1rem 1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:.92rem;line-height:1.45;">
+  <p style="margin:0 0 .75rem;">We use the Meta Pixel to measure our ads and improve the site. You can accept or decline — predictions work either way. See our <a href="/privacy" style="color:#7FE3C0;text-decoration:underline;">Privacy Policy</a>.</p>
+  <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+    <button id="consent-decline" type="button" style="cursor:pointer;background:transparent;color:#EAF3EF;border:1px solid #2E6B57;border-radius:8px;padding:.5rem .9rem;font:inherit;">Decline</button>
+    <button id="consent-accept" type="button" style="cursor:pointer;background:#0B6E4F;color:#fff;border:1px solid #0B6E4F;border-radius:8px;padding:.5rem 1.1rem;font:inherit;font-weight:600;">Accept</button>
+  </div>
+</div>
+<script>
+(function () {
+  var KEY = "ps_consent";
+  var banner = document.getElementById("consent-banner");
+  if (!banner) return;
+  if (!localStorage.getItem(KEY)) banner.hidden = false;   // first visit
+  document.getElementById("consent-accept").onclick = function () {
+    localStorage.setItem(KEY, "granted");
+    banner.hidden = true;
+    if (window.loadMetaPixel) window.loadMetaPixel();
+  };
+  document.getElementById("consent-decline").onclick = function () {
+    localStorage.setItem(KEY, "denied");
+    banner.hidden = true;
+  };
+})();
+</script>
 
 <script src="/static/app.js?v=6"></script>
 </body>

@@ -254,6 +254,12 @@ function decoyPrediction(home, away) {
   };
 }
 
+/* Fire a Meta Pixel event; no-op if the pixel is blocked or not yet loaded
+   (fbq queues calls before its script loads, so this is safe to call early). */
+function trackPixel(event, params) {
+  try { if (window.fbq) window.fbq("track", event, params); } catch (_) {}
+}
+
 /* Start Stripe Checkout. Optionally remember the current fixture so we can
    re-run it on return (predictor page only). */
 async function beginCheckout(btn, saveFixture) {
@@ -269,6 +275,7 @@ async function beginCheckout(btn, saveFixture) {
     }
     const res = await fetch(`${API}/api/checkout`, { method: "POST" });
     if (!res.ok) throw new Error(await errorDetail(res));
+    trackPixel("InitiateCheckout", { value: 5, currency: "USD" });
     window.location = (await res.json()).url;
   } catch (err) {
     alert("Could not start checkout: " + err.message);
@@ -322,6 +329,9 @@ async function handleCheckoutReturn() {
     return;
   }
   if (data.device_token) localStorage.setItem(DEVICE_KEY, data.device_token);
+  // Fresh paid unlock returning from Stripe — fire the Purchase conversion once
+  // (session_id is stripped from the URL above, so a refresh won't re-fire it).
+  trackPixel("Purchase", { value: 5, currency: "USD" });
   showCode(data.code, data.devices_used, data.cap);
   const f = JSON.parse(localStorage.getItem(FIXTURE_KEY) || "null");
   if (f && homeCombo) {
