@@ -39,6 +39,12 @@ PRICE_ID = os.environ.get("PITCHSENSE_STRIPE_PRICE",
                           "price_1ThQREGpqZjDsnwvYaKgzRvH")
 ACTIVATION_CAP = int(os.environ.get("PITCHSENSE_ACTIVATION_CAP", "3"))
 
+# Optional owner/comp secret (PITCHSENSE_OWNER_CODE, read at request time):
+# anyone entering this exact string in the "Enter your code" box unlocks
+# without Stripe and without using a device slot. Leave unset to disable.
+# Internal signed code the owner bypass issues a token against (PS-XXXX-XXXX form):
+_OWNER_TOKEN_CODE = "PS-OWNR-PASS"
+
 # Code alphabet excludes easily-confused characters (0/O, 1/I/L).
 _CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 _CODE_RE = re.compile(r"PS-[A-Z0-9]{4}-[A-Z0-9]{4}")
@@ -242,7 +248,13 @@ def redeem(body: RedeemBody, request: Request,
     redeem_limiter.check(request)
     if not billing_enabled():
         return {"unlocked": True}
-    code = body.code.strip().upper()
+    raw = body.code.strip()
+    owner = os.environ.get("PITCHSENSE_OWNER_CODE", "")
+    if owner and hmac.compare_digest(raw, owner):
+        # owner/comp bypass: no Stripe check, no device-cap slot consumed
+        return {"unlocked": True, "device_token": _make_token(_OWNER_TOKEN_CODE),
+                "owner": True}
+    code = raw.upper()
     if not _CODE_RE.fullmatch(code) or not _code_is_paid(code):
         raise HTTPException(404, "unknown unlock code")
     token, status = _issue_token(code, x_unlock_token)

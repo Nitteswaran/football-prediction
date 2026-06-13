@@ -148,6 +148,25 @@ def test_redeem_rejects_malformed_code(client, clean_billing):
     assert r.status_code == 404
 
 
+def test_owner_code_unlocks_without_stripe(client, clean_billing, monkeypatch):
+    monkeypatch.setenv("PITCHSENSE_OWNER_CODE", "let-me-in-42")
+    r = client.post("/api/redeem", json={"code": "let-me-in-42"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["unlocked"] is True and data.get("owner") is True
+    # the issued token actually unlocks predictions
+    assert clean_billing.device_unlocked(data["device_token"])
+    # and it consumed no device-cap slots
+    assert sum(clean_billing._activations.values()) == 0
+
+
+def test_wrong_owner_code_falls_through(client, clean_billing, monkeypatch):
+    monkeypatch.setenv("PITCHSENSE_OWNER_CODE", "let-me-in-42")
+    # a non-matching, badly-formatted code is still rejected
+    r = client.post("/api/redeem", json={"code": "let-me-in-99"})
+    assert r.status_code == 404
+
+
 def test_news_locked_without_token(client, clean_billing):
     # locked path returns before any network fetch
     r = client.get("/api/news")
