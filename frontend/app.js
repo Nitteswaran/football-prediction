@@ -501,13 +501,17 @@ function renderStrengthCard(d) {
   const fm = TEAM_META[fav] || {}, om = TEAM_META[opp] || {};
   const reasons = [];
 
-  const eloFav = homeFav ? dr.elo_home : dr.elo_away;
-  const eloOpp = homeFav ? dr.elo_away : dr.elo_home;
+  // Drivers may arrive as numbers (real API) or pre-formatted strings (decoy);
+  // coerce to a finite number or null so the math below never blows up.
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+
+  const eloFav = num(homeFav ? dr.elo_home : dr.elo_away);
+  const eloOpp = num(homeFav ? dr.elo_away : dr.elo_home);
   if (eloFav != null && eloOpp != null && eloFav > eloOpp)
     reasons.push(`Higher Elo rating by ${Math.round(eloFav - eloOpp)} (${Math.round(eloFav)} vs ${Math.round(eloOpp)})`);
 
-  const ppgFav = homeFav ? dr.form10_ppg_home : dr.form10_ppg_away;
-  const ppgOpp = homeFav ? dr.form10_ppg_away : dr.form10_ppg_home;
+  const ppgFav = num(homeFav ? dr.form10_ppg_home : dr.form10_ppg_away);
+  const ppgOpp = num(homeFav ? dr.form10_ppg_away : dr.form10_ppg_home);
   if (ppgFav != null && ppgOpp != null && ppgFav > ppgOpp)
     reasons.push(`Better recent form — ${ppgFav.toFixed(1)} vs ${ppgOpp.toFixed(1)} points per game (last 10)`);
 
@@ -515,8 +519,9 @@ function renderStrengthCard(d) {
     reasons.push(`Ranked higher — #${fm.rank} vs #${om.rank}`);
 
   // h2h5_weighted_score is signed from the home team's perspective
-  if (dr.h2h5_weighted_score != null && dr.h2h5_weighted_score !== 0) {
-    const favEdge = homeFav ? dr.h2h5_weighted_score > 0 : dr.h2h5_weighted_score < 0;
+  const h2h = num(dr.h2h5_weighted_score);
+  if (h2h != null && h2h !== 0) {
+    const favEdge = homeFav ? h2h > 0 : h2h < 0;
     if (favEdge) reasons.push("Edge in recent head-to-head meetings");
   }
 
