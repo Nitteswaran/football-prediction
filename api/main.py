@@ -127,7 +127,9 @@ def evaluation():
 # ---------------------------------------------------------------------------
 # Frontend
 # ---------------------------------------------------------------------------
-SITE_URL = os.environ.get("PUBLIC_BASE_URL", "https://pitchsense.fun").rstrip("/")
+# strip whitespace too: a stray trailing space in the env var would otherwise
+# produce a malformed URL like "https://pitchsense.fun /sitemap.xml"
+SITE_URL = (os.environ.get("PUBLIC_BASE_URL") or "https://pitchsense.fun").strip().rstrip("/")
 _index_html: str | None = None
 
 
