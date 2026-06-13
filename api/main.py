@@ -142,10 +142,10 @@ def _wc_picks_html() -> str:
     teams = json.loads(path.read_text()).get("teams", [])
     top = sorted(teams, key=lambda t: t.get("champion", 0), reverse=True)[:6]
     items = "".join(
-        f"<li><span>{i}. {html.escape(t['team'])}</span>"
-        f"<span>{t.get('champion', 0) * 100:.1f}% to win</span></li>"
+        f"<div class='wc-pick'><span>{i}. {html.escape(t['team'])}</span>"
+        f"<span>{t.get('champion', 0) * 100:.1f}% to win</span></div>"
         for i, t in enumerate(top, 1))
-    return f"<ol class='wc-picks'>{items}</ol>" if items else ""
+    return f"<div class='wc-picks'>{items}</div>" if items else ""
 
 
 def _render_index() -> str:

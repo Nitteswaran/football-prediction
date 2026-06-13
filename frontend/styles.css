@@ -432,13 +432,13 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .seo-block p { color: var(--ink-soft); margin-bottom: 14px; }
 .seo-block a { color: var(--green); }
 .seo-note { font-size: 13px; }
-.wc-picks { list-style: none; margin: 0 0 18px; padding: 0; }
-.wc-picks li {
-  display: flex; justify-content: space-between; align-items: center;
+.wc-picks { margin: 0 0 18px; }
+.wc-pick {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
   padding: 11px 0; border-bottom: 1px solid var(--hairline);
 }
-.wc-picks li span:first-child { font-weight: 600; color: var(--ink); }
-.wc-picks li span:last-child { font-family: var(--mono); font-size: 13px; color: var(--green); }
+.wc-pick span:first-child { font-weight: 600; color: var(--ink); }
+.wc-pick span:last-child { font-family: var(--mono); font-size: 13px; color: var(--green); white-space: nowrap; }
 .faq h3 {
   font-size: 16px; margin: 18px 0 6px; color: var(--ink);
 }
