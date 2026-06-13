@@ -419,6 +419,31 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .footer-links a { color: var(--ink-soft); text-decoration: none; }
 .footer-links a:hover { color: var(--green); text-decoration: underline; }
 
+/* ---------- SEO content block ---------- */
+.seo-block {
+  max-width: 720px; margin: 64px 0 8px;
+  padding-top: 40px; border-top: 1px solid var(--hairline);
+}
+.seo-block h2 {
+  font-family: "Fraunces", serif; font-size: 24px; font-weight: 600;
+  margin: 32px 0 12px; color: var(--ink);
+}
+.seo-block h2:first-child { margin-top: 0; }
+.seo-block p { color: var(--ink-soft); margin-bottom: 14px; }
+.seo-block a { color: var(--green); }
+.seo-note { font-size: 13px; }
+.wc-picks { list-style: none; margin: 0 0 18px; padding: 0; }
+.wc-picks li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid var(--hairline);
+}
+.wc-picks li span:first-child { font-weight: 600; color: var(--ink); }
+.wc-picks li span:last-child { font-family: var(--mono); font-size: 13px; color: var(--green); }
+.faq h3 {
+  font-size: 16px; margin: 18px 0 6px; color: var(--ink);
+}
+.faq p { margin-bottom: 12px; }
+
 /* ---------- legal pages ---------- */
 .legal { max-width: 720px; padding-top: 48px; padding-bottom: 80px; }
 .legal h1 { font-size: clamp(30px, 5vw, 42px); margin-bottom: 8px; }

@@ -31,6 +31,14 @@ navToggle.addEventListener("click", () => {
   navToggle.setAttribute("aria-expanded", String(open));
 });
 
+// in-page links (e.g. SEO block) that jump to a tab
+document.querySelectorAll("[data-jump]").forEach((el) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.querySelector(`.nav-link[data-view="${el.dataset.jump}"]`)?.click();
+  });
+});
+
 document.querySelectorAll(".nav-link").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-link").forEach((b) => b.classList.remove("active"));

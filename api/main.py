@@ -14,9 +14,11 @@ from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 
+import html
+
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -125,12 +127,39 @@ def evaluation():
 # ---------------------------------------------------------------------------
 # Frontend
 # ---------------------------------------------------------------------------
+SITE_URL = os.environ.get("PUBLIC_BASE_URL", "https://pitchsense.fun").rstrip("/")
+_index_html: str | None = None
+
+
+def _wc_picks_html() -> str:
+    """Server-render the model's top World Cup contenders so crawlers and
+    answer engines see real content, not an empty JS shell."""
+    path = config.REPORTS_DIR / "worldcup2026_simulation.json"
+    if not path.exists():
+        return ""
+    teams = json.loads(path.read_text()).get("teams", [])
+    top = sorted(teams, key=lambda t: t.get("champion", 0), reverse=True)[:6]
+    items = "".join(
+        f"<li><span>{i}. {html.escape(t['team'])}</span>"
+        f"<span>{t.get('champion', 0) * 100:.1f}% to win</span></li>"
+        for i, t in enumerate(top, 1))
+    return f"<ol class='wc-picks'>{items}</ol>" if items else ""
+
+
+def _render_index() -> str:
+    global _index_html
+    if _index_html is None:
+        tpl = (FRONTEND_DIR / "index.html").read_text()
+        _index_html = tpl.replace("<!--WC_PICKS-->", _wc_picks_html())
+    return _index_html
+
+
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
     @app.get("/", include_in_schema=False)
     def index():
-        return FileResponse(FRONTEND_DIR / "index.html")
+        return HTMLResponse(_render_index())
 
     @app.get("/terms", include_in_schema=False)
     def terms():
@@ -139,6 +168,22 @@ if FRONTEND_DIR.exists():
     @app.get("/privacy", include_in_schema=False)
     def privacy():
         return FileResponse(FRONTEND_DIR / "privacy.html")
+
+    @app.get("/robots.txt", include_in_schema=False)
+    def robots():
+        return PlainTextResponse(
+            f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    def sitemap():
+        pages = ["/", "/terms", "/privacy"]
+        urls = "".join(f"<url><loc>{SITE_URL}{p}</loc>"
+                       f"<changefreq>{'daily' if p == '/' else 'yearly'}</changefreq>"
+                       f"</url>" for p in pages)
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+               '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+               f"{urls}</urlset>")
+        return Response(content=xml, media_type="application/xml")
 
 
 if __name__ == "__main__":
