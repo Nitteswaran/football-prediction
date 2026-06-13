@@ -439,10 +439,25 @@ select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 }
 .wc-pick span:first-child { font-weight: 600; color: var(--ink); }
 .wc-pick span:last-child { font-family: var(--mono); font-size: 13px; color: var(--green); white-space: nowrap; }
-.faq h3 {
-  font-size: 16px; margin: 18px 0 6px; color: var(--ink);
+.faq { margin-top: 4px; }
+.faq details {
+  border-bottom: 1px solid var(--hairline);
 }
-.faq p { margin-bottom: 12px; }
+.faq summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 2px; font-size: 16px; font-weight: 600; color: var(--ink);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+"; font-family: var(--mono); font-size: 20px; font-weight: 400;
+  color: var(--green); line-height: 1; transition: transform 0.2s;
+}
+.faq details[open] summary::after { content: "−"; }
+.faq summary:hover { color: var(--green); }
+.faq details p {
+  margin: 0; padding: 0 2px 18px; color: var(--ink-soft);
+}
 
 /* ---------- legal pages ---------- */
 .legal { max-width: 720px; padding-top: 48px; padding-bottom: 80px; }
