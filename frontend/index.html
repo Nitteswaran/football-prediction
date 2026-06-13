@@ -9,9 +9,9 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pitchsense.fun/">
 <meta name="theme-color" content="#0B6E4F">
-<link rel="icon" href="/static/favicon.ico?v=3" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png?v=3">
-<link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v=3">
+<link rel="icon" href="/static/favicon.ico?v=4" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png?v=4">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v=4">
 
 <!-- Open Graph / Twitter -->
 <meta property="og:type" content="website">
@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css?v=3">
+<link rel="stylesheet" href="/static/styles.css?v=4">
 
 <script type="application/ld+json">
 {
@@ -83,6 +83,7 @@
     </button>
     <nav class="nav" id="nav">
       <button class="nav-link active" data-view="predict">Match predictor</button>
+      <button class="nav-link" data-view="schedule">Schedule</button>
       <button class="nav-link" data-view="worldcup">World Cup 2026</button>
       <button class="nav-link" data-view="rankings">Rankings</button>
       <button class="nav-link" data-view="news">News &amp; insights</button>
@@ -102,6 +103,10 @@
   </section>
 
   <section class="fixture-card">
+    <div class="matchup-head">
+      <span class="matchup-label">Matchup</span>
+      <span class="host-adv" id="host-adv"></span>
+    </div>
     <div class="fixture-row">
       <div class="team-select">
         <label class="field-label" for="home-team">Home</label>
@@ -111,6 +116,7 @@
                  aria-expanded="false" aria-controls="home-team-list">
           <ul class="combo-list hidden" id="home-team-list" role="listbox"></ul>
         </div>
+        <div class="team-meta" id="home-meta"></div>
       </div>
       <div class="vs">v</div>
       <div class="team-select">
@@ -121,6 +127,7 @@
                  aria-expanded="false" aria-controls="away-team-list">
           <ul class="combo-list hidden" id="away-team-list" role="listbox"></ul>
         </div>
+        <div class="team-meta" id="away-meta"></div>
       </div>
     </div>
     <div class="fixture-options">
@@ -253,6 +260,18 @@
   </section>
 </main>
 
+<!-- ============ SCHEDULE ============ -->
+<main id="view-schedule" class="view wrap hidden">
+  <section class="hero">
+    <p class="eyebrow">All 72 group-stage matches</p>
+    <h1>The group schedule.</h1>
+    <p class="lede">Every group game with the model's favourite. Click any match
+    to open it in the <a href="#" data-jump="predict">Match predictor</a>.
+    Knockout fixtures are decided by results, so they're not listed yet.</p>
+  </section>
+  <div id="schedule-groups"></div>
+</main>
+
 <!-- ============ WORLD CUP ============ -->
 <main id="view-worldcup" class="view wrap hidden">
   <section class="hero">
@@ -341,6 +360,6 @@
   </div>
 </footer>
 
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import config
-from api import billing, news
+from api import billing, news, wc
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,22 @@ def teams():
 @app.get("/api/rankings")
 def rankings(top: int = 80):
     return {"rankings": _predictor().elo_table(top=top)}
+
+
+@app.get("/api/teammeta")
+def teammeta():
+    """Per-team card data (flag, code, Elo, rank, group, host, title, form)."""
+    if "teammeta" not in _state:
+        _state["teammeta"] = wc.team_meta(_predictor())
+    return _state["teammeta"]
+
+
+@app.get("/api/schedule")
+def schedule():
+    """All 72 group-stage matches with the model's favourite per match."""
+    if "schedule" not in _state:
+        _state["schedule"] = wc.group_schedule(_predictor())
+    return {"matches": _state["schedule"], "groups": list(wc.GROUPS)}
 
 
 @app.post("/api/predict")

@@ -50,11 +50,12 @@ document.querySelectorAll(".nav-link").forEach((btn) => {
     if (btn.dataset.view === "worldcup") loadWorldCup();
     if (btn.dataset.view === "rankings") loadRankings();
     if (btn.dataset.view === "news") loadNews();
+    if (btn.dataset.view === "schedule") loadSchedule();
   });
 });
 
 /* ---------------- teams ---------------- */
-function makeCombo(input, teams) {
+function makeCombo(input, teams, onChange) {
   const list = document.getElementById(input.getAttribute("aria-controls"));
   let matches = teams;
   let active = -1;
@@ -108,6 +109,7 @@ function makeCombo(input, teams) {
     input.value = team;
     lastValid = team;
     close();
+    if (onChange) onChange(team);
   }
 
   function setActive(i) {
@@ -137,23 +139,62 @@ function makeCombo(input, teams) {
     // snap free text to the exact team name (case/accent-insensitive),
     // otherwise restore the last valid pick
     const exact = teams.find((t) => norm(t) === norm(input.value.trim()));
+    const changed = exact && exact !== lastValid;
     if (exact) lastValid = exact;
     input.value = lastValid;
     close();
+    if (changed && onChange) onChange(lastValid);
   });
 
   return { set: select };
 }
 
 let homeCombo, awayCombo;
+let TEAM_META = {};   // team name -> {code, flag, group, host, elo, rank, title, form}
 
 async function loadTeams() {
-  const res = await fetch(`${API}/api/teams`);
-  const { teams } = await res.json();
-  homeCombo = makeCombo($("#home-team"), teams);
-  awayCombo = makeCombo($("#away-team"), teams);
+  const [teamsRes, metaRes] = await Promise.all([
+    fetch(`${API}/api/teams`),
+    fetch(`${API}/api/teammeta`).catch(() => null),
+  ]);
+  const { teams } = await teamsRes.json();
+  if (metaRes && metaRes.ok) TEAM_META = await metaRes.json();
+  homeCombo = makeCombo($("#home-team"), teams, (t) => onTeamChange("home", t));
+  awayCombo = makeCombo($("#away-team"), teams, (t) => onTeamChange("away", t));
   homeCombo.set(teams.includes("Brazil") ? "Brazil" : teams[0]);
   awayCombo.set(teams.includes("Germany") ? "Germany" : teams[1]);
+}
+
+/* ---------------- matchup card ---------------- */
+function onTeamChange(side, team) {
+  renderTeamMeta(side, team);
+  updateHostAdvantage();
+}
+
+function renderTeamMeta(side, team) {
+  const el = $(`#${side}-meta`);
+  const m = TEAM_META[team];
+  if (!m) { el.innerHTML = ""; el.classList.remove("has-meta"); return; }
+  const bits = [];
+  if (m.elo != null) bits.push(`<span>Elo <b>${Math.round(m.elo)}</b></span>`);
+  if (m.rank != null) bits.push(`<span class="muted">#${m.rank}</span>`);
+  if (m.group) bits.push(`<span class="muted">Group ${m.group}</span>`);
+  if (m.host) bits.push(`<span class="host-tag">host</span>`);
+  if (m.title != null) bits.push(`<span class="muted">Title ${(m.title * 100).toFixed(1)}%</span>`);
+  const form = (m.form || []).map((r) =>
+    `<span class="form-dot form-${r}">${r}</span>`).join("");
+  el.innerHTML =
+    `<div class="team-name">${m.flag || ""} ${team} <span class="team-code">${m.code || ""}</span></div>` +
+    `<div class="meta-line">${bits.join("")}</div>` +
+    (form ? `<div class="form-row"><span class="form-label">FORM</span>${form}</div>` : "");
+  el.classList.add("has-meta");
+}
+
+function updateHostAdvantage() {
+  const h = TEAM_META[$("#home-team").value];
+  const a = TEAM_META[$("#away-team").value];
+  const host = (h && h.host && h) || (a && a.host && a);
+  $("#host-adv").textContent = host ? `host advantage: ${host.code}` : "";
 }
 
 /* ---------------- paywall ---------------- */
@@ -561,6 +602,46 @@ async function loadRankings() {
       <td class="num">${r.matches}</td>`;
     tbody.appendChild(tr);
   }
+}
+
+/* ---------------- schedule ---------------- */
+let scheduleLoaded = false;
+async function loadSchedule() {
+  if (scheduleLoaded) return;
+  const res = await fetch(`${API}/api/schedule`);
+  if (!res.ok) return;
+  const { matches, groups } = await res.json();
+  scheduleLoaded = true;
+  const wrap = $("#schedule-groups");
+  wrap.innerHTML = "";
+  for (const g of groups) {
+    const sec = document.createElement("section");
+    sec.className = "panel sched-group";
+    sec.innerHTML = `<h3 class="sched-title">Group ${g}</h3>`;
+    for (const m of matches.filter((x) => x.group === g)) {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "sched-match";
+      row.innerHTML = `
+        <span class="sm-team sm-home">${m.home_flag} <b>${m.home_code}</b></span>
+        <span class="sm-v">v</span>
+        <span class="sm-team sm-away"><b>${m.away_code}</b> ${m.away_flag}</span>
+        <span class="sm-fav">${m.fav_code} ${(m.fav_prob * 100).toFixed(0)}%</span>`;
+      row.addEventListener("click", () => openFixture(m.home, m.away, m.neutral));
+      sec.appendChild(row);
+    }
+    wrap.appendChild(sec);
+  }
+}
+
+/* Open a schedule fixture in the Match predictor and run it. */
+function openFixture(home, away, neutral) {
+  homeCombo.set(home);
+  awayCombo.set(away);
+  $("#neutral").checked = !!neutral;
+  $("#tournament").value = "FIFA World Cup";
+  document.querySelector('.nav-link[data-view="predict"]').click();
+  runPrediction();
 }
 
 loadTeams().then(handleCheckoutReturn);

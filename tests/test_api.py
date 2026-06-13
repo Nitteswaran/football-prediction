@@ -173,6 +173,22 @@ def test_news_locked_without_token(client, clean_billing):
     assert r.status_code == 200 and r.json() == {"locked": True}
 
 
+def test_teammeta_card_fields(client):
+    m = client.get("/api/teammeta").json()
+    can = m["Canada"]
+    assert can["code"] == "CAN" and can["host"] is True and can["group"] == "B"
+    assert can["flag"] and isinstance(can["form"], list)
+    assert m["Spain"]["rank"] == 1            # top of the Elo table
+
+
+def test_schedule_has_all_group_matches(client):
+    s = client.get("/api/schedule").json()
+    assert len(s["matches"]) == 72           # 12 groups x 6 round-robin matches
+    assert len(s["groups"]) == 12
+    m = s["matches"][0]
+    assert {"home", "away", "fav_code", "fav_prob", "group"} <= m.keys()
+
+
 def test_news_insights_from_simulation(clean_billing):
     from api import news
     insights = news.get_insights()
