@@ -1,4 +1,4 @@
-"""Global configuration for the football prediction system.
+"""Global configuration for Pitchsense.
 
 All paths, split dates, feature windows and model constants live here so that
 every pipeline stage shares a single source of truth.
