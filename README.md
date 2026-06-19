@@ -8,13 +8,15 @@ app_port: 7860
 pinned: false
 ---
 
-# Pitchsense — Football Prediction System
+# Pitchsense — AI Football Predictions
+
+**Live site: [pitchsense.fun](https://pitchsense.fun)**
 
 An end-to-end machine learning system for international football: match
 outcome probabilities, expected goals, exact-score distributions, and Monte
 Carlo World Cup simulation — wrapped in a FastAPI service with a clean web UI.
 
-![stack](https://img.shields.io/badge/python-3.14-0B6E4F) ![models](https://img.shields.io/badge/models-XGB%20·%20LGBM%20·%20CatBoost%20·%20PyTorch-161D1A)
+![stack](https://img.shields.io/badge/python-3.14-0B6E4F) ![models](https://img.shields.io/badge/models-XGB%20·%20LGBM%20·%20CatBoost%20·%20PyTorch-161D1A) [![site](https://img.shields.io/badge/site-pitchsense.fun-0B6E4F)](https://pitchsense.fun)
 
 ## What it does
 
@@ -155,7 +157,7 @@ To automate it (the Space can't retrain itself — it's a serving container):
 - **GitHub Actions (recommended, no machine needed):** push this repo to
   GitHub, add an `HF_TOKEN` write-token secret, and the included
   `.github/workflows/refresh.yml` retrains every Monday 06:00 UTC and ships.
-- **Local cron:** `0 6 * * 1 cd /path/to/football-prediction && make refresh`
+- **Local cron:** `0 6 * * 1 cd /path/to/pitchsense && make refresh`
   (your machine must be on and have git auth for the `space` remote).
 
 ## Reports

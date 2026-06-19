@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     _state.clear()
 
 
-app = FastAPI(title="Football Prediction API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Pitchsense API", version="1.0.0", lifespan=lifespan)
 
 # The frontend is served by this app (same origin), so CORS is only needed
 # for explicitly whitelisted extra origins.
